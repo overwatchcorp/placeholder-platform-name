@@ -1,14 +1,20 @@
+// module imports
 require('dotenv').config();
 const fastify = require('fastify')({
   logger: true,
 });
 const mongoose = require('mongoose');
+const cors = require('cors');
+// relative imports
 const Reading = require('./src/schema/Reading');
 const { ingestSchema, ingestHandler } = require('./src/routes/ingest');
 const { readingsSchema, readingsHandler } = require('./src/routes/readings');
 
 // connect to database
 mongoose.connect(process.env.MONGODB_URI);
+
+// middleware
+fastify.use(cors());
 
 // routes
 fastify.route({
