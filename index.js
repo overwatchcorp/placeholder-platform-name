@@ -6,11 +6,13 @@ const mongoose = require('mongoose');
 
 // MONGODB SETUP
 mongoose.connect(process.env.MONGODB_URI);
+// Mongo Reading Schema
 const Reading = mongoose.model('Reading', {
   deviceID: String,
   deviceType: String,
   dataKeys: Array,
   data: Object,
+  timestamp: Number,
 });
 
 const ingestSchema = {
