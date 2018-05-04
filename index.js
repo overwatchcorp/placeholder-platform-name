@@ -1,5 +1,16 @@
+require('dotenv').config();
 const fastify = require('fastify')({
   logger: true,
+});
+const mongoose = require('mongoose');
+
+// MONGODB SETUP
+mongoose.connect(process.env.MONGODB_URI);
+const Reading = mongoose.model('Reading', {
+  deviceID: String,
+  deviceType: String,
+  dataKeys: Array,
+  data: Object,
 });
 
 const ingestSchema = {
@@ -23,15 +34,17 @@ const ingestSchema = {
 };
 
 const ingestHandler = async (req, res) => {
-  const { deviceID, deviceType, data } = req.body;
+  const { deviceID, deviceType, data, dataKeys } = req.body;
+  dataKeys.map(k => data[k] = Math.floor(data[k] * 100) / 100);
   const timestamp = new Date().toISOString();
   fastify.log.info({
     msg: 'ingest',
     deviceID,
     deviceType,
-    data,
     timestamp,
   });
+  const reading = new Reading({deviceID, deviceType, data, dataKeys });
+  await reading.save();
   const response = {
     ok: true,
   };
