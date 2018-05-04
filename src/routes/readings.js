@@ -16,7 +16,9 @@ const readingsSchema = {
     200: {
       type: 'object',
       properties: {
-        data: { type: 'object' },
+        readingsString: {
+          type: 'string',
+        },
       },
     },
   },
@@ -24,18 +26,34 @@ const readingsSchema = {
 
 
 
-const readingsHandler = (req, res) => {
+const readingsHandler = (req, reply) => {
   const start = new Date(req.query.start);
   const end = new Date(req.query.end);
 
-  Reading.find({
-    timestamp: {
-      $gt: start,
-      $lt: end,
-    }
-  }, (err, data) => {
-    res.send({ data });
-  })
+  const c = Reading.find(
+    {
+      timestamp: {
+        $gt: start,
+        $lt: end,
+      }
+    },
+    'data deviceID timestamp'
+  )
+  .limit(5)
+  .cursor();
+
+  const readings = []
+
+  c.on('data', (data) => {
+    readings.push(data);
+  });
+  c.on('close', () => {
+    console.log(readings)
+    reply
+      .code(200)
+      .header('Content-Type', 'application/json')
+      .send({ readingsString: JSON.stringify({readings}) })
+  });
 };
 
 module.exports = { readingsSchema, readingsHandler };
