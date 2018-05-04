@@ -12,7 +12,7 @@ const Reading = mongoose.model('Reading', {
   deviceType: String,
   dataKeys: Array,
   data: Object,
-  timestamp: Number,
+  timestamp: { type: Date, default: Date.now },
 });
 
 const ingestSchema = {
@@ -37,13 +37,13 @@ const ingestSchema = {
 
 const ingestHandler = async (req, res) => {
   const { deviceID, deviceType, data, dataKeys } = req.body;
-  dataKeys.map(k => data[k] = Math.floor(data[k] * 100) / 100);
-  const timestamp = new Date().toISOString();
+  // trim values of noisy decimal points
+  dataKeys.map(k => data[k] = Math.floor(data[k] * 10) / 10);
+  // log device metadata
   fastify.log.info({
     msg: 'ingest',
     deviceID,
     deviceType,
-    timestamp,
   });
   const reading = new Reading({deviceID, deviceType, data, dataKeys });
   await reading.save();
