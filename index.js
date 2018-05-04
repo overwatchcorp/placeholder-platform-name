@@ -3,63 +3,28 @@ const fastify = require('fastify')({
   logger: true,
 });
 const mongoose = require('mongoose');
+const Reading = require('./src/schema/Reading');
+const { ingestSchema, ingestHandler } = require('./src/routes/ingest');
+const { readingsSchema, readingsHandler } = require('./src/routes/readings');
 
-// MONGODB SETUP
+// connect to database
 mongoose.connect(process.env.MONGODB_URI);
-// Mongo Reading Schema
-const Reading = mongoose.model('Reading', {
-  deviceID: String,
-  deviceType: String,
-  dataKeys: Array,
-  data: Object,
-  timestamp: { type: Date, default: Date.now },
-});
 
-const ingestSchema = {
-  body: {
-    type: 'object',
-    properties: {
-      deviceID: { type: 'string' },
-      deviceType: { type: 'string' },
-      dataKeys: { type: 'array' },
-      data: { type: 'object' },
-    },
-  },
-  response: {
-    200: {
-      type: 'object',
-      properties: {
-         ok: { type: 'boolean' },
-      },
-    },
-  },
-};
-
-const ingestHandler = async (req, res) => {
-  const { deviceID, deviceType, data, dataKeys } = req.body;
-  // trim values of noisy decimal points
-  dataKeys.map(k => data[k] = Math.floor(data[k] * 10) / 10);
-  // log device metadata
-  fastify.log.info({
-    msg: 'ingest',
-    deviceID,
-    deviceType,
-  });
-  const reading = new Reading({deviceID, deviceType, data, dataKeys });
-  await reading.save();
-  const response = {
-    ok: true,
-  };
-  return(res.code(200).send(response));
-};
-
+// routes
 fastify.route({
   method: 'POST',
   url: '/ingest',
   schema: ingestSchema,
   handler: ingestHandler,
 });
+fastify.route({
+  method: 'GET',
+  url: '/readings',
+  schema: readingsSchema,
+  handler: readingsHandler,
+});
 
+// server
 const start = async () => {
   const port = process.env.PORT || 3000;
   try {
