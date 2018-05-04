@@ -34,7 +34,7 @@ const readingsHandler = (req, res) => {
       $lt: end,
     }
   }, (err, data) => {
-    res.send(data);
+    res.send({ data });
   })
 };
 
