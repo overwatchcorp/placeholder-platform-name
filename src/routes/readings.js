@@ -39,7 +39,6 @@ const readingsHandler = (req, reply) => {
     },
     'data deviceID timestamp'
   )
-  .limit(5)
   .cursor();
 
   const readings = []
